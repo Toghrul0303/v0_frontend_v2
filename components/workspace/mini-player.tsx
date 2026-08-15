@@ -1,11 +1,11 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useState } from "react"
 import { GripVertical, Minus, Music, Pause, Play, SkipForward, X } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useDraggable } from "./use-draggable"
 
 type PlayerState = "open" | "minimized" | "closed"
-type Point = { x: number; y: number }
 
 function EqBars({ playing }: { playing: boolean }) {
   if (!playing) return null
@@ -23,91 +23,6 @@ function EqBars({ playing }: { playing: boolean }) {
       ))}
     </span>
   )
-}
-
-/**
- * Hook that makes an element free-dragging via pointer events.
- * Position is tracked as an offset (in px) from the element's default
- * bottom-left anchor, and clamped to stay within the viewport.
- */
-function useDraggable() {
-  const [offset, setOffset] = useState<Point>({ x: 0, y: 0 })
-  const [dragging, setDragging] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-  const origin = useRef<{ pointer: Point; offset: Point } | null>(null)
-
-  const onPointerDown = useCallback(
-    (e: React.PointerEvent) => {
-      // Only start dragging with the primary (usually left) button.
-      if (e.button !== 0) return
-      e.preventDefault()
-      ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
-      origin.current = { pointer: { x: e.clientX, y: e.clientY }, offset }
-      setDragging(true)
-    },
-    [offset],
-  )
-
-  const onPointerMove = useCallback(
-    (e: React.PointerEvent) => {
-      if (!origin.current) return
-      const dx = e.clientX - origin.current.pointer.x
-      const dy = e.clientY - origin.current.pointer.y
-      // Anchored bottom-left: moving up/right increases the offset.
-      let nextX = origin.current.offset.x + dx
-      let nextY = origin.current.offset.y - dy
-
-      // Clamp within the viewport based on the element's size.
-      const el = ref.current
-      if (el) {
-        const rect = el.getBoundingClientRect()
-        const maxX = window.innerWidth - rect.width - 16
-        const maxY = window.innerHeight - rect.height - 16
-        nextX = Math.min(Math.max(nextX, 0), Math.max(maxX, 0))
-        nextY = Math.min(Math.max(nextY, 0), Math.max(maxY, 0))
-      }
-      setOffset({ x: nextX, y: nextY })
-    },
-    [],
-  )
-
-  const onPointerUp = useCallback((e: React.PointerEvent) => {
-    origin.current = null
-    setDragging(false)
-    try {
-      ;(e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId)
-    } catch {
-      /* pointer may already be released */
-    }
-  }, [])
-
-  // Keep the player on-screen if the viewport shrinks.
-  useEffect(() => {
-    const onResize = () => {
-      const el = ref.current
-      if (!el) return
-      const rect = el.getBoundingClientRect()
-      const maxX = Math.max(window.innerWidth - rect.width - 16, 0)
-      const maxY = Math.max(window.innerHeight - rect.height - 16, 0)
-      setOffset((o) => ({
-        x: Math.min(o.x, maxX),
-        y: Math.min(o.y, maxY),
-      }))
-    }
-    window.addEventListener("resize", onResize)
-    return () => window.removeEventListener("resize", onResize)
-  }, [])
-
-  const style: React.CSSProperties = {
-    transform: `translate3d(${offset.x}px, ${-offset.y}px, 0)`,
-  }
-
-  return {
-    ref,
-    style,
-    dragging,
-    handleProps: { onPointerDown, onPointerMove, onPointerUp, onPointerCancel: onPointerUp },
-  }
 }
 
 export function MiniPlayer() {

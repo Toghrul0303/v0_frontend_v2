@@ -1,16 +1,17 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import {
+  ChevronDown,
   ChevronsLeft,
   ChevronsRight,
-  Flag,
   FolderClosed,
   Plus,
   Sparkles,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { INITIAL_TASKS, MEMORY_FOLDERS, type Task } from "./data"
+import { MEMORY_FOLDERS, type Chapter } from "./data"
+import { STATUS_STYLES, useTaskTracker } from "./task-tracker-context"
 
 const SESSIONS = [
   { id: "s1", name: "Physics · Rotational Motion", active: true },
@@ -25,21 +26,7 @@ export function LeftSidebar({
   collapsed: boolean
   onToggle: () => void
 }) {
-  const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS)
-
-  const progress = useMemo(() => {
-    const done = tasks.filter((t) => t.done).length
-    return Math.round((done / tasks.length) * 100)
-  }, [tasks])
-
-  const toggleTask = (id: string) =>
-    setTasks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t)),
-    )
-  const toggleFlag = (id: string) =>
-    setTasks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, flagged: !t.flagged } : t)),
-    )
+  const { progress } = useTaskTracker()
 
   return (
     <aside
@@ -114,91 +101,7 @@ export function LeftSidebar({
           </Section>
 
           {/* Task tracker */}
-          <Section title="Task Tracker">
-            <div className="rounded-xl border border-border bg-card p-3">
-              <div className="mb-1 flex items-center justify-between text-xs">
-                <span className="font-medium text-muted-foreground">
-                  Session progress
-                </span>
-                <span className="font-semibold text-primary">{progress}%</span>
-              </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
-                <div
-                  className="bg-brand-gradient h-full rounded-full transition-all duration-700 ease-out"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-            </div>
-
-            <ul className="mt-2 space-y-1">
-              {tasks.map((task) => (
-                <li
-                  key={task.id}
-                  className="group flex items-start gap-2.5 rounded-lg px-2 py-2 transition-colors hover:bg-sidebar-accent/50"
-                >
-                  <button
-                    type="button"
-                    role="checkbox"
-                    aria-checked={task.done}
-                    aria-label={`Mark ${task.label} ${task.done ? "incomplete" : "complete"}`}
-                    onClick={() => toggleTask(task.id)}
-                    className={cn(
-                      "mt-0.5 grid size-4 shrink-0 place-items-center rounded-[5px] border transition-colors",
-                      task.done
-                        ? "border-transparent bg-primary text-primary-foreground"
-                        : "border-muted-foreground/40 hover:border-primary",
-                    )}
-                  >
-                    {task.done && (
-                      <svg
-                        viewBox="0 0 12 12"
-                        className="size-3"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        aria-hidden="true"
-                      >
-                        <path d="M2.5 6.5l2.5 2.5 4.5-5" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    )}
-                  </button>
-
-                  <div className="min-w-0 flex-1">
-                    <p
-                      className={cn(
-                        "text-[0.8rem] leading-tight font-medium",
-                        task.done && "text-muted-foreground line-through",
-                      )}
-                    >
-                      {task.label}
-                    </p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {task.detail}
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => toggleFlag(task.id)}
-                    aria-label={task.flagged ? "Unflag question" : "Flag confusing question"}
-                    aria-pressed={task.flagged}
-                    className={cn(
-                      "mt-0.5 shrink-0 rounded-md p-1 transition-colors",
-                      task.flagged
-                        ? "text-destructive"
-                        : "text-muted-foreground/40 opacity-0 group-hover:opacity-100 hover:text-destructive",
-                    )}
-                  >
-                    <Flag
-                      className="size-3.5"
-                      fill={task.flagged ? "currentColor" : "none"}
-                      aria-hidden="true"
-                    />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </Section>
+          <TaskTracker />
 
           {/* Memory box */}
           <Section title="Personal Database · Memory Box">
@@ -231,6 +134,109 @@ export function LeftSidebar({
         </div>
       )}
     </aside>
+  )
+}
+
+function TaskTracker() {
+  const { chapters, progress } = useTaskTracker()
+
+  return (
+    <Section title="Task Tracker">
+      {/* Progress (based on green items, ignoring skipped) */}
+      <div className="rounded-xl border border-border bg-card p-3">
+        <div className="mb-1 flex items-center justify-between text-xs">
+          <span className="font-medium text-muted-foreground">
+            Session progress
+          </span>
+          <span className="font-semibold text-primary">{progress}%</span>
+        </div>
+        <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
+          <div
+            className="bg-brand-gradient h-full rounded-full transition-all duration-700 ease-out"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 px-1 text-[0.65rem] text-muted-foreground">
+        {(["completed", "review", "skipped"] as const).map((status) => (
+          <span key={status} className="flex items-center gap-1">
+            <span className={cn("size-2 rounded-full", STATUS_STYLES[status].dot)} />
+            {STATUS_STYLES[status].label}
+          </span>
+        ))}
+      </div>
+
+      {/* Chapters accordion */}
+      <div className="mt-2 space-y-2">
+        {chapters.map((chapter) => (
+          <ChapterAccordion key={chapter.id} chapter={chapter} />
+        ))}
+      </div>
+    </Section>
+  )
+}
+
+function ChapterAccordion({ chapter }: { chapter: Chapter }) {
+  const [open, setOpen] = useState(true)
+  const { activeQuestionId, cycleStatus, setActiveQuestionId } = useTaskTracker()
+
+  const done = chapter.questions.filter((q) => q.status === "completed").length
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-border bg-card">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="flex w-full items-center gap-2 px-3 py-2.5 text-left transition-colors hover:bg-sidebar-accent/40"
+      >
+        <ChevronDown
+          className={cn(
+            "size-4 shrink-0 text-muted-foreground transition-transform duration-300",
+            !open && "-rotate-90",
+          )}
+          aria-hidden="true"
+        />
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[0.8rem] font-semibold">
+            {chapter.title}
+          </span>
+          <span className="block text-xs text-muted-foreground">
+            {done}/{chapter.questions.length} completed
+          </span>
+        </span>
+      </button>
+
+      {open && (
+        <div className="grid grid-cols-5 gap-1.5 px-3 pb-3">
+          {chapter.questions.map((q) => {
+            const styles = STATUS_STYLES[q.status]
+            const isActive = q.id === activeQuestionId
+            return (
+              <button
+                key={q.id}
+                type="button"
+                onClick={() => {
+                  setActiveQuestionId(q.id)
+                  cycleStatus(q.id)
+                }}
+                title={`${q.label} — ${styles.label} (click to change)`}
+                aria-label={`${q.label}, ${styles.label}. Click to change state.`}
+                className={cn(
+                  "grid h-8 place-items-center rounded-lg border text-xs font-semibold tabular-nums transition-all",
+                  styles.pill,
+                  isActive && "ring-2 ring-primary ring-offset-1 ring-offset-card",
+                )}
+              >
+                {q.label}
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
   )
 }
 

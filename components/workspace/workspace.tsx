@@ -10,6 +10,8 @@ import { Desk } from "./desk"
 import { QuickActions } from "./quick-actions"
 import { ChatPane } from "./chat-pane"
 import { MiniPlayer } from "./mini-player"
+import { PomodoroTimer } from "./pomodoro-timer"
+import { TaskTrackerProvider } from "./task-tracker-context"
 
 export function Workspace() {
   const [focus, setFocus] = useState(false)
@@ -26,12 +28,13 @@ export function Workspace() {
 
   return (
     <ModeContext.Provider value={{ focus, toggleFocus }}>
-      <div
-        className={cn(
-          "h-dvh w-full overflow-hidden transition-colors duration-700",
-          focus && "dark",
-        )}
-      >
+      <TaskTrackerProvider>
+        <div
+          className={cn(
+            "h-dvh w-full overflow-hidden transition-colors duration-700",
+            focus && "dark",
+          )}
+        >
         <div
           className={cn(
             "relative flex h-full flex-col bg-background text-foreground transition-all duration-700",
@@ -97,8 +100,10 @@ export function Workspace() {
           </div>
 
           <MiniPlayer />
+          <PomodoroTimer />
         </div>
       </div>
+      </TaskTrackerProvider>
     </ModeContext.Provider>
   )
 }

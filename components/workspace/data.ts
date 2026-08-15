@@ -14,6 +14,20 @@ export type Task = {
   flagged: boolean
 }
 
+export type QuestionStatus = "unanswered" | "completed" | "review" | "skipped"
+
+export type Question = {
+  id: string
+  label: string
+  status: QuestionStatus
+}
+
+export type Chapter = {
+  id: string
+  title: string
+  questions: Question[]
+}
+
 export type MemoryFolder = {
   id: string
   name: string
@@ -81,6 +95,40 @@ export const INITIAL_TASKS: Task[] = [
     done: false,
     flagged: false,
   },
+]
+
+/** Builds a chapter of exactly 10 questions (Q1…Q10). */
+function buildChapter(
+  id: string,
+  title: string,
+  seed: Partial<Record<number, QuestionStatus>> = {},
+): Chapter {
+  return {
+    id,
+    title,
+    questions: Array.from({ length: 10 }, (_, i) => {
+      const n = i + 1
+      return {
+        id: `${id}-q${n}`,
+        label: `Q${n}`,
+        status: seed[n] ?? "unanswered",
+      }
+    }),
+  }
+}
+
+export const INITIAL_CHAPTERS: Chapter[] = [
+  buildChapter("serway-22", "Serway · Chapter 22", {
+    1: "completed",
+    2: "completed",
+    3: "review",
+    4: "completed",
+    5: "skipped",
+  }),
+  buildChapter("serway-23", "Serway · Chapter 23", {
+    1: "completed",
+    2: "review",
+  }),
 ]
 
 export const MEMORY_FOLDERS: MemoryFolder[] = [
