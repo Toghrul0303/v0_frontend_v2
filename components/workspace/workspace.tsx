@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useState } from "react"
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
 import { cn } from "@/lib/utils"
 import { ModeContext } from "./mode-context"
 import { TopNavbar } from "./top-navbar"
@@ -59,11 +60,39 @@ export function Workspace() {
                 onToggle={() => setSidebarCollapsed((c) => !c)}
               />
 
-              <main className="flex min-w-0 flex-1">
-                <Desk />
-                <QuickActions />
-                <ChatPane />
-              </main>
+              <PanelGroup
+                direction="horizontal"
+                autoSaveId="lumen-desk-chat"
+                className="flex min-w-0 flex-1"
+                tagName="main"
+              >
+                <Panel defaultSize={70} minSize={40} className="flex min-w-0">
+                  <Desk />
+                  <QuickActions />
+                </Panel>
+
+                <PanelResizeHandle className="group relative flex w-1.5 shrink-0 items-center justify-center bg-border/60 outline-none transition-colors hover:bg-primary/60 data-[resize-handle-active]:bg-primary">
+                  {/* visible drag handle */}
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-y-0 -inset-x-1"
+                  />
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none z-10 flex h-10 w-3 items-center justify-center rounded-full border border-border bg-popover shadow-sm transition-colors group-hover:border-primary/50"
+                  >
+                    <span className="flex flex-col gap-0.5">
+                      <span className="size-0.5 rounded-full bg-muted-foreground" />
+                      <span className="size-0.5 rounded-full bg-muted-foreground" />
+                      <span className="size-0.5 rounded-full bg-muted-foreground" />
+                    </span>
+                  </span>
+                </PanelResizeHandle>
+
+                <Panel defaultSize={30} minSize={20} className="flex min-w-0">
+                  <ChatPane />
+                </Panel>
+              </PanelGroup>
             </div>
           </div>
 

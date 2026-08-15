@@ -62,7 +62,7 @@ export function ChatPane() {
   return (
     <aside
       aria-label="AI tutor chat"
-      className="flex w-[24rem] max-w-full shrink-0 flex-col border-l border-border bg-card/40"
+      className="flex min-w-0 flex-1 flex-col border-l border-border bg-card/40"
     >
       {/* Header */}
       <div className="flex items-center gap-2.5 border-b border-border px-4 py-3">
