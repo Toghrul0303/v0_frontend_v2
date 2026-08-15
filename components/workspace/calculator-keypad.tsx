@@ -4,22 +4,21 @@ import { useState } from "react"
 import { Atom, Calculator, Check, Delete, FlaskConical, Sigma } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-type SubjectId = "math" | "physics" | "chemistry"
+type SubjectId = "standard" | "math" | "physics" | "chemistry"
 
 type Subject = {
   id: SubjectId
   name: string
-  /** Short glyph shown inside the toggle circle. */
-  glyph: string
   icon: typeof Atom
   /** Dynamic quick-access symbol keys for this subject. */
   symbols: string[]
 }
 
 const SUBJECTS: Subject[] = [
-  { id: "math", name: "Mathematics", glyph: "π", icon: Sigma, symbols: ["∫", "∑", "∞", "√"] },
-  { id: "physics", name: "Physics", glyph: "α", icon: Atom, symbols: ["ρ", "φ", "α", "ε"] },
-  { id: "chemistry", name: "Chemistry", glyph: "Δ", icon: FlaskConical, symbols: ["Δ", "°C", "⇌"] },
+  { id: "standard", name: "Standard", icon: Calculator, symbols: ["MC", "MR", "M+", "M-"] },
+  { id: "math", name: "Mathematics", icon: Sigma, symbols: ["∫", "∑", "∞", "√", "∂", "∇", "≈", "≠"] },
+  { id: "physics", name: "Physics", icon: Atom, symbols: ["ρ", "α", "φ", "ε", "ω", "τ", "λ", "μ"] },
+  { id: "chemistry", name: "Chemistry", icon: FlaskConical, symbols: ["Δ", "°C", "⇌", "N_A", "pH", "e-"] },
 ]
 
 type Key = { label: string; kind?: "op" }
@@ -94,9 +93,7 @@ export function CalculatorKeypad() {
             pickerOpen && "scale-105",
           )}
         >
-          <span className="font-display text-sm font-semibold leading-none">
-            {subject.glyph}
-          </span>
+          <SubjectIcon className="size-4" aria-hidden="true" />
         </button>
 
         {/* Dynamic symbols for the active subject */}
@@ -152,8 +149,8 @@ export function CalculatorKeypad() {
                       <Icon className="size-4" aria-hidden="true" />
                     </span>
                     <span className="flex-1 font-medium">{s.name}</span>
-                    <span className="font-mono text-xs text-muted-foreground">
-                      {s.symbols.join(" ")}
+                    <span className="max-w-[5rem] truncate font-mono text-xs text-muted-foreground">
+                      {s.symbols.slice(0, 4).join(" ")}
                     </span>
                     {active && <Check className="size-4 text-primary" aria-hidden="true" />}
                   </button>

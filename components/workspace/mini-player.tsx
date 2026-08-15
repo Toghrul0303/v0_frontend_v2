@@ -1,8 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { Minus, Music, Pause, Play, SkipForward, X } from "lucide-react"
+import { GripVertical, Minus, Music, Pause, Play, SkipForward, X } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useDraggable } from "./use-draggable"
 
 type PlayerState = "open" | "minimized" | "closed"
 
@@ -27,6 +28,13 @@ function EqBars({ playing }: { playing: boolean }) {
 export function MiniPlayer() {
   const [playing, setPlaying] = useState(true)
   const [state, setState] = useState<PlayerState>("open")
+  const { ref, style, dragging, handleProps } = useDraggable()
+
+  // Shared drag-handle styling.
+  const gripClass = cn(
+    "grid shrink-0 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
+    dragging ? "cursor-grabbing" : "cursor-grab",
+  )
 
   // Fully hidden — leave a tiny launcher so it can be brought back.
   if (state === "closed") {
@@ -35,17 +43,27 @@ export function MiniPlayer() {
         type="button"
         onClick={() => setState("open")}
         aria-label="Open focus music player"
-        className="bg-brand-gradient ring-brand-glow fixed bottom-4 left-4 z-50 grid size-11 place-items-center rounded-full text-white shadow-xl transition-transform hover:scale-105"
+        className="bg-brand-gradient ring-brand-glow fixed bottom-4 left-4 z-[60] grid size-11 place-items-center rounded-full text-white shadow-xl transition-transform hover:scale-105"
       >
         <Music className="size-5" aria-hidden="true" />
       </button>
     )
   }
 
-  // Minimized — tiny pill with just artwork + play/pause.
+  // Minimized — tiny pill with a grip, artwork + play/pause.
   if (state === "minimized") {
     return (
-      <div className="fixed bottom-4 left-4 z-50 flex items-center gap-2 rounded-full border border-border bg-popover/90 p-1.5 shadow-xl backdrop-blur-md">
+      <div
+        ref={ref}
+        style={style}
+        className={cn(
+          "fixed bottom-4 left-4 z-[60] flex items-center gap-1.5 rounded-full border border-border bg-popover/90 p-1.5 shadow-xl backdrop-blur-md",
+          dragging && "select-none",
+        )}
+      >
+        <span {...handleProps} className={cn(gripClass, "size-7")} aria-label="Drag player">
+          <GripVertical className="size-4" aria-hidden="true" />
+        </span>
         <button
           type="button"
           onClick={() => setState("open")}
@@ -73,7 +91,23 @@ export function MiniPlayer() {
 
   // Full player.
   return (
-    <div className="fixed bottom-4 left-4 z-50 flex items-center gap-3 rounded-2xl border border-border bg-popover/90 p-2 pr-3 shadow-xl backdrop-blur-md">
+    <div
+      ref={ref}
+      style={style}
+      className={cn(
+        "fixed bottom-4 left-4 z-[60] flex items-center gap-2 rounded-2xl border border-border bg-popover/90 p-2 pr-3 shadow-xl backdrop-blur-md",
+        dragging && "select-none shadow-2xl",
+      )}
+    >
+      {/* drag handle */}
+      <span
+        {...handleProps}
+        className={cn(gripClass, "h-11 w-5")}
+        aria-label="Drag player"
+      >
+        <GripVertical className="size-4" aria-hidden="true" />
+      </span>
+
       {/* animated art */}
       <div className="bg-brand-gradient relative grid size-11 shrink-0 place-items-center overflow-hidden rounded-xl text-white">
         <Music className="size-5" aria-hidden="true" />

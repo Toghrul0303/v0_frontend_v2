@@ -4,18 +4,23 @@ import { useEffect, useRef, useState } from "react"
 import {
   ArrowUp,
   Check,
+  CheckCircle2,
   FunctionSquare,
   LineChart,
+  MinusCircle,
   Plus,
   Sparkles,
+  XCircle,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
   INITIAL_MESSAGES,
   TOOL_MODES,
   type ChatMessage,
+  type QuestionStatus,
   type ToolMode,
 } from "./data"
+import { useTaskTracker } from "./task-tracker-context"
 
 export function ChatPane() {
   const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES)
@@ -25,6 +30,7 @@ export function ChatPane() {
   const [saved, setSaved] = useState<Record<string, boolean>>({})
   const scrollRef = useRef<HTMLDivElement>(null)
   const popoverRef = useRef<HTMLDivElement>(null)
+  const { activeQuestion, setStatus } = useTaskTracker()
 
   useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -62,7 +68,7 @@ export function ChatPane() {
   return (
     <aside
       aria-label="AI tutor chat"
-      className="flex w-[24rem] max-w-full shrink-0 flex-col border-l border-border bg-card/40"
+      className="flex min-w-0 flex-1 flex-col border-l border-border bg-card/40"
     >
       {/* Header */}
       <div className="flex items-center gap-2.5 border-b border-border px-4 py-3">
@@ -95,6 +101,44 @@ export function ChatPane() {
 
       {/* Input bar */}
       <div className="border-t border-border p-3">
+        {/* Quick-action evaluation bar for the active question */}
+        {activeQuestion && (
+          <div className="mb-2 flex items-center gap-1.5 rounded-xl border border-border bg-secondary/50 p-1.5">
+            <span className="px-1.5 text-xs font-medium text-muted-foreground">
+              <span className="font-semibold text-foreground">
+                {activeQuestion.question.label}
+              </span>{" "}
+              · evaluate:
+            </span>
+            <div className="ml-auto flex items-center gap-1">
+              <EvalButton
+                status="completed"
+                current={activeQuestion.question.status}
+                onClick={() => setStatus(activeQuestion.question.id, "completed")}
+                icon={CheckCircle2}
+                label="Understood / Task Finished"
+                className="bg-emerald-500 hover:bg-emerald-600"
+              />
+              <EvalButton
+                status="review"
+                current={activeQuestion.question.status}
+                onClick={() => setStatus(activeQuestion.question.id, "review")}
+                icon={XCircle}
+                label="Need to Review"
+                className="bg-red-500 hover:bg-red-600"
+              />
+              <EvalButton
+                status="skipped"
+                current={activeQuestion.question.status}
+                onClick={() => setStatus(activeQuestion.question.id, "skipped")}
+                icon={MinusCircle}
+                label="Pass / Skip"
+                className="bg-muted-foreground/70 hover:bg-muted-foreground"
+              />
+            </div>
+          </div>
+        )}
+
         <div className="relative flex items-end gap-2 rounded-2xl border border-border bg-background p-2 focus-within:border-primary/50">
           {/* + tools button + popover */}
           <div ref={popoverRef} className="relative">
@@ -190,6 +234,40 @@ export function ChatPane() {
         </p>
       </div>
     </aside>
+  )
+}
+
+function EvalButton({
+  status,
+  current,
+  onClick,
+  icon: Icon,
+  label,
+  className,
+}: {
+  status: QuestionStatus
+  current: QuestionStatus
+  onClick: () => void
+  icon: typeof CheckCircle2
+  label: string
+  className?: string
+}) {
+  const active = status === current
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={label}
+      aria-label={label}
+      aria-pressed={active}
+      className={cn(
+        "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-white transition-all hover:-translate-y-px",
+        className,
+        active ? "ring-2 ring-foreground/30" : "opacity-80 hover:opacity-100",
+      )}
+    >
+      <Icon className="size-3.5" aria-hidden="true" />
+    </button>
   )
 }
 
