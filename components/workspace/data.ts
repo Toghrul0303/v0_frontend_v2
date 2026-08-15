@@ -16,53 +16,10 @@ export type Task = {
 
 export type QuestionStatus = "unanswered" | "completed" | "review" | "skipped"
 
-export type FormulaCard = {
-  id: string
-  name: string
-  /** Display expression, e.g. "τ = I · α". */
-  expression: string
-  hint?: string
-}
-
-export type StepVar = {
-  /** Symbol key used in the step template, e.g. "M". */
-  key: string
-  label: string
-  value: number
-  unit?: string
-}
-
-export type SolutionStep = {
-  id: string
-  label: string
-  /**
-   * Pure function of the current variable map returning a rendered
-   * result string. Lets step results recalculate as inputs change.
-   */
-  compute: (vars: Record<string, number>) => string
-}
-
-export type Problem = {
-  /** Short prompt/question text shown in the Active Problem Card. */
-  prompt: string
-  /** Optional source label, e.g. "Serway · Ch 22 · Q4". */
-  source?: string
-  /** Optional uploaded diagram/screenshot path. */
-  image?: string
-  imageAlt?: string
-  formulas: FormulaCard[]
-  vars: StepVar[]
-  steps: SolutionStep[]
-  /** Only render the Graph widget when this is true. */
-  hasGraph: boolean
-}
-
 export type Question = {
   id: string
   label: string
   status: QuestionStatus
-  /** Optional rich problem content that drives the Desk layout. */
-  problem?: Problem
 }
 
 export type Chapter = {
